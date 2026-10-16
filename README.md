@@ -87,4 +87,3 @@ CI runs the regression suite against checked-in layouts, so contributors do
 not need `solc` just to run tests. The fixture source and regeneration script
 make the expected compiler output reproducible.
 
-
