@@ -1,16 +1,10 @@
 # Solidity Layout Diff
 
-An offline Python CLI for reviewing the storage-layout part of a Solidity
-upgrade. It compares the `storageLayout` objects emitted by `solc`, reports the
-variables affected, and returns an exit code suitable for CI.
+Did an upgrade move or reinterpret a variable that was already in storage? `slotdiff` compares the `storageLayout` JSON emitted by `solc` and gives that question a CI-friendly exit code. It does not inspect the rest of an upgrade.
 
-**Scope:** This is a conservative first-pass diagnostic, not an upgrade-safety
-certificate. Use an upgrade-aware validator such as OpenZeppelin's
-`validateUpgrade` for the full implementation review.
+## Try the checked-in examples
 
-## Quick start
-
-Python 3.11+; no runtime dependencies or RPC credentials.
+Python 3.11+ is enough; there are no runtime dependencies or RPC calls.
 
 ```bash
 python -m pip install -e .
@@ -18,30 +12,20 @@ slotdiff examples/layouts/VaultV1.json examples/layouts/VaultV2Append.json
 slotdiff examples/layouts/VaultV1.json examples/layouts/VaultV2Reordered.json --json
 ```
 
-The checked-in layouts were compiled from
-[`examples/contracts/VaultVariants.sol`](examples/contracts/VaultVariants.sol)
-with `solc` 0.8.37. The first command returns `PASS`; the second returns
-`FAIL` and identifies the moved `owner` and `feeBps` byte positions.
+The first pair appends storage and returns `PASS`. The second moves packed variables and returns `FAIL`; the output names `owner` and `feeBps` and shows their changed byte positions. These JSON files were compiled from [`VaultVariants.sol`](examples/contracts/VaultVariants.sol) with `solc` 0.8.37.
 
-## Results
+| Result | Exit code | What to do |
+| --- | ---: | --- |
+| `PASS` | 0 | Existing variables kept their position and recursive type; additions are after occupied storage. Continue the rest of the upgrade review. |
+| `REVIEW` | 1 | A gap changed, a name may have changed, or new data uses an earlier free byte. Check the intent with an upgrade-aware tool. |
+| `FAIL` | 2 | An existing variable moved, disappeared, or changed type, or a new variable overlaps occupied bytes. |
+| `UNASSESSED` | 3 | Input is missing, ambiguous, malformed, or has no supported top-level storage. Do not treat it as a pass. |
 
-| Status | Exit | Meaning |
-|---|---:|---|
-| `PASS` | 0 | Existing variables retain their position and recursive type; new variables append after occupied storage. |
-| `REVIEW` | 1 | Storage gaps, possible renames, or additions in earlier unused bytes need human or upgrade-aware validation. |
-| `FAIL` | 2 | Existing variable moved, disappeared, changed type, or new storage overlaps occupied bytes. |
-| `UNASSESSED` | 3 | Input is missing, ambiguous, malformed, or has no supported top-level storage. |
+Names are used to match variables. A same-position, same-type rename is therefore `REVIEW`, not an automatic pass. Empty and namespaced layouts are currently `UNASSESSED`.
 
-`PASS` covers only the storage properties above. It says nothing about
-initializers, permissions, proxy kind, function selectors, ABI compatibility,
-or runtime behavior. `REVIEW` is intentionally distinct from `FAIL`: shrinking
-an OpenZeppelin-style `__gap` can be valid, but needs gap accounting.
+## Input from your own build
 
-## Compiler input
-
-The CLI accepts either a raw `storageLayout` object or the full Solidity
-standard-JSON compiler output. Select a contract when the latter contains more
-than one:
+Pass a raw `storageLayout` object or full Solidity standard-JSON output. If the compiler output contains multiple contracts, select one on each side:
 
 ```bash
 slotdiff old-solc.json new-solc.json \
@@ -50,40 +34,15 @@ slotdiff old-solc.json new-solc.json \
   --json
 ```
 
-Request compiler layouts with this standard-JSON output selection:
+Ask `solc` for layouts with `{"settings":{"outputSelection":{"*":{"*":["storageLayout"]}}}}`. The [compiler documentation](https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html) describes the fields and marks this output experimental.
 
-```json
-{"settings":{"outputSelection":{"*":{"*":["storageLayout"]}}}}
-```
-
-The compiler [documents the `storage` and `types` JSON fields](https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html),
-including slot, byte offset, encoding, and recursive type metadata. It also
-marks this JSON output as experimental, so malformed or unfamiliar metadata
-returns `UNASSESSED` instead of a green result.
-
-## What is checked
-
-- Slot and byte offset of every existing top-level variable, including packed
-  variables.
-- Recursive type metadata for mappings, arrays, and struct members.
-- Collisions between new variables and bytes occupied by old variables.
-- Storage-gap changes and possible renames, surfaced as `REVIEW`.
-
-Variable names are used to match old and new entries. A rename at an identical
-position and type is `REVIEW`, because the intent cannot be inferred from
-compiler layout alone. Empty and namespaced storage layouts are currently
-`UNASSESSED`. For a production upgrade, follow the
-[OpenZeppelin upgrade validation guidance](https://docs.openzeppelin.com/upgrades-plugins/writing-upgradeable)
-and review the complete contract behavior.
+`slotdiff` checks slots, byte offsets, and recursive type metadata for mappings, arrays, and structs. It does not check initializers, permissions, proxy kind, selectors, ABI compatibility, or runtime behavior. Use an [upgrade-aware validator](https://docs.openzeppelin.com/upgrades-plugins/writing-upgradeable) for a production upgrade.
 
 ## Development
 
 ```bash
 python -m unittest discover -s tests -v
-python scripts/build_examples.py  # requires solc; regenerates checked-in layouts
+python scripts/build_examples.py  # requires solc; regenerates the fixtures
 ```
 
-CI runs the regression suite against checked-in layouts, so contributors do
-not need `solc` just to run tests. The fixture source and regeneration script
-make the expected compiler output reproducible.
-
+CI runs the tests against the checked-in layouts, so `solc` is only needed when regenerating them.
