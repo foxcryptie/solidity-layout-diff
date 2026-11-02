@@ -1,0 +1,60 @@
+{
+  "storage": [
+    {
+      "astId": 12,
+      "contract": "VaultVariants.sol:VaultV2Append",
+      "label": "owner",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_address"
+    },
+    {
+      "astId": 14,
+      "contract": "VaultVariants.sol:VaultV2Append",
+      "label": "feeBps",
+      "offset": 20,
+      "slot": "0",
+      "type": "t_uint96"
+    },
+    {
+      "astId": 18,
+      "contract": "VaultVariants.sol:VaultV2Append",
+      "label": "balance",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_mapping(t_address,t_uint256)"
+    },
+    {
+      "astId": 20,
+      "contract": "VaultVariants.sol:VaultV2Append",
+      "label": "withdrawalDelay",
+      "offset": 0,
+      "slot": "2",
+      "type": "t_uint256"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_mapping(t_address,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    },
+    "t_uint96": {
+      "encoding": "inplace",
+      "label": "uint96",
+      "numberOfBytes": "12"
+    }
+  }
+}

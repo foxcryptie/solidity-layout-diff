@@ -1,0 +1,54 @@
+{
+  "storage": [
+    {
+      "astId": 65,
+      "contract": "VaultVariants.sol:PositionV1",
+      "label": "positions",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_mapping(t_address,t_struct(Position)60_storage)"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_mapping(t_address,t_struct(Position)60_storage)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => struct PositionV1.Position)",
+      "numberOfBytes": "32",
+      "value": "t_struct(Position)60_storage"
+    },
+    "t_struct(Position)60_storage": {
+      "encoding": "inplace",
+      "label": "struct PositionV1.Position",
+      "members": [
+        {
+          "astId": 57,
+          "contract": "VaultVariants.sol:PositionV1",
+          "label": "collateral",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint128"
+        },
+        {
+          "astId": 59,
+          "contract": "VaultVariants.sol:PositionV1",
+          "label": "debt",
+          "offset": 16,
+          "slot": "0",
+          "type": "t_uint128"
+        }
+      ],
+      "numberOfBytes": "32"
+    },
+    "t_uint128": {
+      "encoding": "inplace",
+      "label": "uint128",
+      "numberOfBytes": "16"
+    }
+  }
+}
